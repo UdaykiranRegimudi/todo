@@ -3,84 +3,86 @@ import TodoItem from '../TodoItem'
 import './index.css'
 
 class SimpleTodos extends Component {
-  state = {todoList: [], todoText: ''}
-
-  componentDidMount() {
-    this.getTodosList()
+  state = {
+    todosList: [],
+    addText: '',
   }
 
-  delete1 = async id => {
-    const url = `https://uday-todo-app.herokuapp.com/todos/${id}/`
+  componentDidMount() {
+    this.getTodos()
+  }
+
+  getTodos = async () => {
+    const url = 'https://uday-fullstack.herokuapp.com/todos'
+    const response = await fetch(url)
+    const data = await response.json()
+    this.setState({todosList: data})
+  }
+
+  text = event => {
+    this.setState({addText: event.target.value})
+  }
+
+  deleteTodo = async id => {
+    const url = `https://uday-fullstack.herokuapp.com/todos/${id}`
     const options = {
       method: 'DELETE',
     }
     const response = await fetch(url, options)
-  }
-
-  addTodo = async () => {
-    const {todoList, todoText} = this.state
-    let todoCount = 1
-    if (todoList.length !== 0) {
-      const length1 = todoList.length
-      todoCount = todoList[length1 - 1].id + 1
-    }
-    const newTodo = {
-      id: todoCount,
-      todo: todoText,
-      isChecked: 'false',
-    }
-
-    const url = 'https://uday-todo-app.herokuapp.com/todos/'
-    const options = {
-      method: 'POST',
-      body: JSON.stringify(newTodo),
-    }
-
-    const response = await fetch(url, options)
-    console.log(response)
-  }
-
-  getTodosList = async () => {
-    const url = 'https://uday-todo-app.herokuapp.com/todos/'
-    const response = await fetch(url)
     const data = await response.json()
-    this.setState({todoList: data})
+    console.log(data)
+    this.getTodos()
   }
 
-  todoText = event => {
-    this.setState({todoText: event.target.value})
+  addTodo = async event => {
+    const {todosList, addText} = this.state
+    const id1 = todosList[todosList.length - 1].id + 1
+    if (event.key === 'Enter') {
+      const url = 'http://uday-fullstack.herokuapp.com/todos/'
+      const newTodo = {
+        id: id1,
+        todo: addText,
+        isChecked: false,
+      }
+      console.log(newTodo)
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(newTodo),
+      }
+
+      const response = await fetch(url, options)
+      const data = await response.json()
+      this.getTodos()
+    }
   }
 
   render() {
-    const {todoText, todoList} = this.state
-    return (
-      <div className="col-12">
-        <h1 className="todos-heading">Todos</h1>
-        <h1 className="create-task-heading">
-          Create <span className="create-task-heading-subpart">Task</span>
-        </h1>
-        <input
-          type="text"
-          onChange={this.todoText}
-          value={todoText}
-          className="todo-user-input"
-          placeholder="What needs to be done?"
-        />
-        <button
-          className="button"
-          id="addTodoButton"
-          type="button"
-          onClick={this.addTodo}
-        >
-          Add
-        </button>
-        <h1 className="todo-items-heading">
-          My <span className="todo-items-heading-subpart">Tasks</span>
-        </h1>
+    const {todosList, addText} = this.state
 
-        {todoList.map(each => (
-          <TodoItem key={each.id} details={each} delete1={this.delete1} />
-        ))}
+    return (
+      <div className="app-container">
+        <div className="simple-todos-container">
+          <h1 className="heading">Simple Todos</h1>
+          <input
+            type="text"
+            value={addText}
+            onChange={this.text}
+            onKeyPress={this.addTodo}
+          />
+          <ul className="todos-list">
+            {todosList.map(eachTodo => (
+              <TodoItem
+                key={eachTodo.id}
+                todoDetails={eachTodo}
+                deleteTodo={this.deleteTodo}
+              />
+            ))}
+          </ul>
+        </div>
       </div>
     )
   }
